@@ -83,4 +83,14 @@ class StudentServiceTest {
 
         verify(studentRepository, times(1)).deleteById(1L);
     }
+	
+	@Test
+	void getAllStudents_sansEtudiant_retourneListeVide() {
+		when(studentRepository.findAll()).thenReturn(List.of());
+
+		List<Student> result = studentService.getAllStudents();
+
+		assertTrue(result.isEmpty());
+		verify(studentRepository).findAll();
+	}
 }

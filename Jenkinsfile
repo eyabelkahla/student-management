@@ -10,6 +10,11 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
 
+    environment {
+        DOCKER_IMAGE = 'eyabk2002/student-management'
+        DOCKER_TAG = "${BUILD_NUMBER}"
+    }
+
     stages {
 
         stage('Commit') {
@@ -41,9 +46,44 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                sh '''
+                    docker build \
+                        -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                        -t ${DOCKER_IMAGE}:latest .
+                '''
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USERNAME" \
+                            --password-stdin
+
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker push ${DOCKER_IMAGE}:latest
+                    '''
+                }
+            }
+        }
     }
 
     post {
+        always {
+            sh 'docker logout || true'
+        }
+
         success {
             archiveArtifacts artifacts: 'target/*.jar',
                              fingerprint: true

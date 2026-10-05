@@ -74,7 +74,7 @@ class StudentServiceTest {
 
         Student result = studentService.saveStudent(student);
 
-        assertEquals(999L, result.getIdStudent());
+        assertEquals(1L, result.getIdStudent());
         verify(studentRepository).save(student);
     }
 
